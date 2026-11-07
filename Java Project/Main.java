@@ -36,31 +36,6 @@ public class Main{
             return;
         }
 
-    // checking newobjects
-    //     System.out.println(jupiter.mass);
-        
-    // checking physics gravity method
-    //     Velocity acceleration =Physics.calculateGravity(earth,sun);
-    //     System.out.println("X acceleration: "+ acceleration.vx);
-    //     System.out.println("Y acceleration: "+ acceleration.vy);
-    //     
-    //  //checking acceleration  and if it changes the location aspects
-    //      for (int i=0;i<10000;i++){
-    //         Velocity acceleration= Physics.calculateGravity(earth,sun);
-    //         Physics.updateBody(earth,acceleration,1);
-    //         System.out.println("Earths x:"+ earth.l.x);
-    //         System.out.println("Earths y:"+ earth.l.y);
-    //         System.out.println("Earths vx:"+ earth.v.vx);
-    //         System.out.println("Earths vy:"+ earth.v.vy);
-    //         
-
-    //     }
-    //      System.out.println("Earths x:"+ earth.l.x);
-    //      System.out.println("Earths y:"+ earth.l.y);
-    //      System.out.println("Earths vx:"+ earth.v.vx);
-    //      System.out.println("Earths vy:"+ earth.v.vy);
-    
-
         SwingUtilities.invokeLater(() -> new SimulationWindow("Solar System", galaxy.byDescendingRadius(), CollisionRules.standard()).start());
     }
 
