@@ -22,6 +22,12 @@ public class Physics {
         body.l.y+=body.v.vy * dt;
     }
 
+    static boolean touching(Body a, Body b){
+        double dx=b.l.x-a.l.x;
+        double dy=b.l.y-a.l.y;
+        return Math.sqrt(dx*dx+dy*dy) < a.radius + b.radius;
+    }
+
     // Velocity needed at the given location to circle the centre body, v = sqrt(GM/r)
     static Velocity circularOrbit(Body centre, Location at){
         double dx=at.x-centre.l.x;

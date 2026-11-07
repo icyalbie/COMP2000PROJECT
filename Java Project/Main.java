@@ -61,7 +61,7 @@ public class Main{
     //      System.out.println("Earths vy:"+ earth.v.vy);
     
 
-        SwingUtilities.invokeLater(() -> new SimulationWindow("Solar System", galaxy.byDescendingRadius()).start());
+        SwingUtilities.invokeLater(() -> new SimulationWindow("Solar System", galaxy.byDescendingRadius(), CollisionRules.standard()).start());
     }
 
 }

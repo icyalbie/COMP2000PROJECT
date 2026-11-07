@@ -5,7 +5,6 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import java.awt.event.MouseAdapter;
@@ -24,9 +23,11 @@ public class SimulationPanel extends JPanel {
     private static final double DT = 5000;
 
     private final List<Body> bodies;
+    private final CollisionRules collisionRules;
 
-    SimulationPanel(List<? extends Body> bodies){
+    SimulationPanel(List<? extends Body> bodies, CollisionRules collisionRules){
         this.bodies = new ArrayList<>(bodies);
+        this.collisionRules = collisionRules;
         setBackground(Color.BLACK);
         setPreferredSize(new Dimension(1000,600));
 
@@ -59,10 +60,11 @@ public class SimulationPanel extends JPanel {
     }
 
     private void tick(){
+        // Collisions are checked every step so fast bodies can't skip past each other between ticks
         for (int step = 0; step < STEPS_PER_TICK; step++){
             applyGravity();
+            collisionRules.resolveAll(bodies).forEach(collision -> System.out.println(collision.description()));
         }
-        handleBlackHoleCollisions();
         repaint();
     }
 
@@ -77,32 +79,6 @@ public class SimulationPanel extends JPanel {
                 ay += a.vy;
             }
             Physics.updateBody(body, new Velocity(ax, ay), DT);
-        }
-    }
-
-    private void handleBlackHoleCollisions(){
-        Iterator<Body> it = bodies.iterator();
-        while (it.hasNext()){
-            Body body = it.next();
-            if (body instanceof BlackHole) continue;
-
-            for (Body source : bodies){
-                if (!(source instanceof BlackHole)) continue;
-
-                double dx = source.l.x - body.l.x;
-                double dy = source.l.y - body.l.y;
-                double distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < source.radius + body.radius){
-                    try {
-                        throw new CollisionException(body.name + " was consumed by " + source.name);
-                    } catch (CollisionException ex) {
-                        System.out.println(ex.getMessage());
-                        it.remove();
-                    }
-                    break;
-                }
-            }
         }
     }
 

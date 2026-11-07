@@ -20,11 +20,4 @@ public class Planet extends Body{
         }
         return new Color(120,170,255);
     }
-
-    void collide(){
-        System.out.print("Planet destroyed");
-    }
-    void stable(){
-        System.out.print("Planet stable ");
-    }
 }
