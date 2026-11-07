@@ -20,7 +20,8 @@ public class SimulationPanel extends JPanel {
 
     private static final int TICK_DELAY_MS = 30;
     private static final int STEPS_PER_TICK = 400;
-    private static final double DT = 1;
+    // Sim time per physics step; at 400 steps per 30ms tick, Earth orbits in ~15s on screen
+    private static final double DT = 5000;
 
     private final List<Body> bodies;
 
