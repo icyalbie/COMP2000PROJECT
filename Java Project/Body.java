@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Graphics2D;
 
 public class Body {
        String  name;
@@ -27,5 +28,12 @@ public class Body {
 
     Color colour(){
         return Color.LIGHT_GRAY;
+    }
+
+    //x, y and r are already in screen pixels
+    void draw(Graphics2D g2, int x, int y, int r){
+        g2.setColor(colour());
+        g2.fillOval(x-r,y-r,r*2,r*2);
+        g2.drawString(name,x+r+4,y-r-4);
     }
 }

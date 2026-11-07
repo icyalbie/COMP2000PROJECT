@@ -4,7 +4,11 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.util.List;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.Map;
+import java.util.stream.Collectors;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import java.awt.event.MouseAdapter;
@@ -21,9 +25,12 @@ public class SimulationPanel extends JPanel {
     private static final int STEPS_PER_TICK = 400;
     // Sim time per physics step; at 400 steps per 30ms tick, Earth orbits in ~15s on screen
     private static final double DT = 5000;
+    private static final int MAX_EVENTS_SHOWN = 5;
+    private static final int LINE_HEIGHT = 16;
 
     private final List<Body> bodies;
     private final CollisionRules collisionRules;
+    private final Deque<String> recentEvents = new ArrayDeque<>();
 
     SimulationPanel(List<? extends Body> bodies, CollisionRules collisionRules){
         this.bodies = new ArrayList<>(bodies);
@@ -63,9 +70,17 @@ public class SimulationPanel extends JPanel {
         // Collisions are checked every step so fast bodies can't skip past each other between ticks
         for (int step = 0; step < STEPS_PER_TICK; step++){
             Physics.step(bodies, DT);
-            collisionRules.resolveAll(bodies).forEach(collision -> System.out.println(collision.description()));
+            collisionRules.resolveAll(bodies).forEach(collision -> logEvent(collision.description()));
         }
         repaint();
+    }
+
+    private void logEvent(String event){
+        System.out.println(event);
+        recentEvents.addFirst(event);
+        if (recentEvents.size() > MAX_EVENTS_SHOWN){
+            recentEvents.removeLast();
+        }
     }
 
     @Override
@@ -81,10 +96,38 @@ public class SimulationPanel extends JPanel {
             int x=centreX + (int) Math.round(body.l.x * DISTANCE_SCALE);
             int y=centreY + (int) Math.round(body.l.y * DISTANCE_SCALE);
             int r=Math.max(MIN_RADIUS_PX,(int) Math.round(body.radius * SIZE_SCALE));
+            body.draw(g2, x, y, r);
+        }
 
-            g2.setColor(body.colour());
-            g2.fillOval(x-r,y-r,r*2,r*2);
-            g2.drawString(body.name,x+r+4,y-r-4);
+        drawBarycentre(g2, centreX, centreY);
+        drawStats(g2);
+    }
+
+    private void drawBarycentre(Graphics2D g2, int centreX, int centreY){
+        Location barycentre = bodies.stream().collect(SimulationStats.barycentre());
+        int x = centreX + (int) Math.round(barycentre.x * DISTANCE_SCALE);
+        int y = centreY + (int) Math.round(barycentre.y * DISTANCE_SCALE);
+        g2.setColor(Color.RED);
+        g2.drawLine(x - 5, y, x + 5, y);
+        g2.drawLine(x, y - 5, x, y + 5);
+        g2.drawString("barycentre", x + 8, y + 4);
+    }
+
+    private void drawStats(Graphics2D g2){
+        int y = LINE_HEIGHT;
+        g2.setColor(Color.WHITE);
+
+        String counts = SimulationStats.countByType(bodies).entrySet().stream()
+                .map(entry -> entry.getKey() + ": " + entry.getValue())
+                .collect(Collectors.joining("   "));
+        g2.drawString(counts, 10, y);
+
+        Map<Boolean, Long> life = SimulationStats.planetsByLife(bodies);
+        g2.drawString("Planets with life: " + life.get(true) + " / " + (life.get(true) + life.get(false)), 10, y += LINE_HEIGHT);
+
+        g2.setColor(Color.LIGHT_GRAY);
+        for (String event : recentEvents){
+            g2.drawString(event, 10, y += LINE_HEIGHT);
         }
     }
 }

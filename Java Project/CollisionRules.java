@@ -86,9 +86,12 @@ public class CollisionRules {
                 });
     }
 
-    //Conserves momentum and volume so the merged body keeps moving realistically
+    //Conserves momentum and volume so the merged body keeps moving realistically, and merges at the
+    //pair's centre of mass so the system's barycentre doesn't jump
     private static void absorb(Body survivor, Body lost){
         double totalMass = survivor.mass + lost.mass;
+        survivor.l.x = (survivor.mass * survivor.l.x + lost.mass * lost.l.x) / totalMass;
+        survivor.l.y = (survivor.mass * survivor.l.y + lost.mass * lost.l.y) / totalMass;
         survivor.v.vx = (survivor.mass * survivor.v.vx + lost.mass * lost.v.vx) / totalMass;
         survivor.v.vy = (survivor.mass * survivor.v.vy + lost.mass * lost.v.vy) / totalMass;
         survivor.mass = totalMass;
