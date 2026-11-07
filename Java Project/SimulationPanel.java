@@ -1,8 +1,11 @@
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
+import java.awt.geom.Ellipse2D;
 import java.util.List;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -27,6 +30,7 @@ public class SimulationPanel extends JPanel {
     private static final double DT = 5000;
     private static final int MAX_EVENTS_SHOWN = 5;
     private static final int LINE_HEIGHT = 16;
+    private static final Color HABITABLE_ZONE = new Color(60, 200, 90, 45);
 
     private final List<Body> bodies;
     private final CollisionRules collisionRules;
@@ -72,6 +76,7 @@ public class SimulationPanel extends JPanel {
             Physics.step(bodies, DT);
             collisionRules.resolveAll(bodies).forEach(collision -> logEvent(collision.description()));
         }
+        bodies.forEach(body -> body.update(bodies, STEPS_PER_TICK * DT).ifPresent(this::logEvent));
         repaint();
     }
 
@@ -92,6 +97,7 @@ public class SimulationPanel extends JPanel {
         int centreX=getWidth()/2;
         int centreY=getHeight()/2;
 
+        drawHabitableZones(g2, centreX, centreY);
         for (Body body : bodies){
             int x=centreX + (int) Math.round(body.l.x * DISTANCE_SCALE);
             int y=centreY + (int) Math.round(body.l.y * DISTANCE_SCALE);
@@ -101,6 +107,23 @@ public class SimulationPanel extends JPanel {
 
         drawBarycentre(g2, centreX, centreY);
         drawStats(g2);
+    }
+
+    //A translucent band from HABITABLE_MIN to HABITABLE_MAX around every star
+    private void drawHabitableZones(Graphics2D g2, int centreX, int centreY){
+        double midRadius = (Star.HABITABLE_MIN + Star.HABITABLE_MAX) / 2 * DISTANCE_SCALE;
+        float width = (float) ((Star.HABITABLE_MAX - Star.HABITABLE_MIN) * DISTANCE_SCALE);
+        Stroke original = g2.getStroke();
+        g2.setStroke(new BasicStroke(width));
+        g2.setColor(HABITABLE_ZONE);
+        bodies.stream()
+                .filter(Star.class::isInstance)
+                .forEach(star -> {
+                    double x = centreX + star.l.x * DISTANCE_SCALE;
+                    double y = centreY + star.l.y * DISTANCE_SCALE;
+                    g2.draw(new Ellipse2D.Double(x - midRadius, y - midRadius, midRadius * 2, midRadius * 2));
+                });
+        g2.setStroke(original);
     }
 
     private void drawBarycentre(Graphics2D g2, int centreX, int centreY){

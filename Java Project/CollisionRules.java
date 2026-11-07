@@ -70,14 +70,14 @@ public class CollisionRules {
                 .when(Planet.class, Meteor.class, (planet, meteor) -> {
                     absorb(planet, meteor);
                     if (planet.hasLife){
-                        planet.hasLife = false;
+                        planet.wipeOutLife();
                         return meteor.name + " struck " + planet.name + " and wiped out all life";
                     }
                     return meteor.name + " struck " + planet.name;
                 })
                 .when(Planet.class, Planet.class, (bigger, smaller) -> {
                     absorb(bigger, smaller);
-                    bigger.hasLife = false;
+                    bigger.wipeOutLife();
                     return smaller.name + " smashed into " + bigger.name;
                 })
                 .when(Body.class, Body.class, (bigger, smaller) -> {

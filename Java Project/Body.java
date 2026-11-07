@@ -1,5 +1,7 @@
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.util.List;
+import java.util.Optional;
 
 public class Body {
        String  name;
@@ -28,6 +30,11 @@ public class Body {
 
     Color colour(){
         return Color.LIGHT_GRAY;
+    }
+
+    //Called once per tick for behaviour other than gravity; returns a description if something notable happened
+    Optional<String> update(List<? extends Body> bodies, double dt){
+        return Optional.empty();
     }
 
     //x, y and r are already in screen pixels
