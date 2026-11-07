@@ -62,24 +62,10 @@ public class SimulationPanel extends JPanel {
     private void tick(){
         // Collisions are checked every step so fast bodies can't skip past each other between ticks
         for (int step = 0; step < STEPS_PER_TICK; step++){
-            applyGravity();
+            Physics.step(bodies, DT);
             collisionRules.resolveAll(bodies).forEach(collision -> System.out.println(collision.description()));
         }
         repaint();
-    }
-
-    private void applyGravity(){
-        for (Body body : bodies){
-            double ax = 0;
-            double ay = 0;
-            for (Body source : bodies){
-                if (source == body) continue;
-                Velocity a = Physics.calculateGravity(body, source);
-                ax += a.vx;
-                ay += a.vy;
-            }
-            Physics.updateBody(body, new Velocity(ax, ay), DT);
-        }
     }
 
     @Override
