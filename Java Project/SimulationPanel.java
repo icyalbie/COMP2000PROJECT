@@ -11,8 +11,10 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -35,11 +37,14 @@ public class SimulationPanel extends JPanel {
     private static final int MAX_EVENTS_SHOWN = 5;
     private static final int LINE_HEIGHT = 16;
     private static final Color HABITABLE_ZONE = new Color(60, 200, 90, 45);
+    // Same mass as the Sun, so a black hole dropped nearby disrupts the system without instantly swallowing it
+    private static final double SPAWNED_BLACK_HOLE_MASS = 1000000;
 
     private final List<Body> bodies;
     private final CollisionRules collisionRules;
     private final Deque<String> recentEvents = new ArrayDeque<>();
     private int meteorsDropped = 0;
+    private int blackHolesDropped = 0;
 
     private double zoom = 1;
     // Screen offset in pixels, changed by dragging
@@ -58,7 +63,13 @@ public class SimulationPanel extends JPanel {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                dropMeteor(toSimX(e.getX()), toSimY(e.getY()));
+                double simX = toSimX(e.getX());
+                double simY = toSimY(e.getY());
+                if (SwingUtilities.isRightMouseButton(e)){
+                    dropBlackHole(simX, simY);
+                } else {
+                    dropMeteor(simX, simY);
+                }
             }
 
             @Override
@@ -108,12 +119,21 @@ public class SimulationPanel extends JPanel {
     }
 
     private void dropMeteor(double simX, double simY){
+        meteorsDropped++;
+        spawn(() -> new Meteor("Meteor " + meteorsDropped, 0.5, new Location(simX, simY), 2, new Velocity(0, 0)));
+    }
+
+    private void dropBlackHole(double simX, double simY){
+        blackHolesDropped++;
+        spawn(() -> new BlackHole("Black Hole " + blackHolesDropped, SPAWNED_BLACK_HOLE_MASS, new Location(simX, simY), 8, new Velocity(0, 0)));
+    }
+
+    private void spawn(Supplier<Body> create){
         try {
-            meteorsDropped++;
-            bodies.add(new Meteor("Meteor " + meteorsDropped, 0.5, new Location(simX, simY), 2, new Velocity(0, 0)));
+            bodies.add(create.get());
             repaint();
         } catch (InvalidBodyException ex) {
-            System.err.println("Could not create meteor: " + ex.getMessage());
+            System.err.println("Could not create body: " + ex.getMessage());
         }
     }
 
@@ -208,6 +228,6 @@ public class SimulationPanel extends JPanel {
         }
 
         g2.setColor(Color.GRAY);
-        g2.drawString("Scroll to zoom  |  drag to pan  |  click to drop a meteor", 10, getHeight() - 10);
+        g2.drawString("Scroll to zoom  |  drag to pan  |  left-click: drop a meteor  |  right-click: drop a black hole", 10, getHeight() - 10);
     }
 }
